@@ -1,5 +1,5 @@
 function Utils()
-	self = {}
+	local self = {}
 
 	function self.asString(o)
 	   if type(o) == 'table' then
@@ -75,10 +75,46 @@ function Utils()
 		local tbl = self.split(cmdlist, ",");
 
 		for key, cmd in pairs(tbl) do
-			obj[cmd] = function()
-				exec(cmd);--self.sendADMCommand(deviceID, cmd);
+			obj[cmd] = function(...)
+				exec(cmd, ...);--self.sendADMCommand(deviceID, cmd);
 			end
 		end
+	end
+
+	function self.toggleGroup(buttons, callback)
+		local currentBtn;
+		for i, btn in ipairs(buttons) do
+			self.assignCommands(actions, btn .. "Changed", function(cmd, checked)
+				if not checked then
+					if btn == currentBtn then
+						layout[btn].checked = true;
+					end
+					return;
+				elseif not (btn == currentBtn) then
+					local temp = currentBtn;
+					currentBtn = btn;
+					if temp then
+						layout[temp].checked = false;
+					end
+				end
+
+				if callback then
+					callback(btn);
+				end
+			end);
+		end
+	end
+
+	function self.showDialog(msg, onTapAction)
+		local server = require("server");
+		server.update({ 
+			type = "dialog", 
+			text = msg, 
+			ontap = onTapAction,
+			children = {
+				{ type = "button", text = "OK" },
+			}
+		});
 	end
 
 	return self;

@@ -8,6 +8,12 @@ CMStates = {
 	CLOSED = 6,
 }
 
+CMErrors = {
+	DESERIALIZE = 1,
+	SERIALIZE = 2,
+	CONNECTION = 3,
+}
+
 function CMClient(n, i, p)
 	local self = {
 		-- public fields go in the instance table
@@ -32,6 +38,7 @@ function CMClient(n, i, p)
 	local garbageReceived = 0;
 	local stateChangeHandler;
 	local receiveHandler;
+	local receiveErrorHandler;
 	local signHandler;
 
 
@@ -51,11 +58,15 @@ function CMClient(n, i, p)
 		receiveHandler = h;
 	end
 
+	function self.attachReceiveErrorHandler(h)
+		receiveErrorHandler = h;
+	end
+
 	function self.signHandler(h)
 		signHandler = h;
 	end
 
-	function self.handleError(err)
+	function self.handleError(err, errCode)
 		self.setState(CMStates.ERROR);
 
 		if self.alwaysConnect and not self.isConnected() and not self.isConnecting() then
@@ -63,14 +74,13 @@ function CMClient(n, i, p)
 		end
 
 		if errorHandler then
-			errorHandler(err);
+			errorHandler(err, erroCode);
 		else
 			error(err);
 		end
 	end
 
 	function self.handleStateChange(oldState, newState)
-		print("in state change handler yoo");
 		if stateChangeHandler then
 			stateChangeHandler(oldState, newState);
 		end
@@ -143,7 +153,7 @@ function CMClient(n, i, p)
 					end, 200);
 				else
 					self.trace("No ip and port", "connecting");
-					self.handleError("No IP and Port provided in connection request response");
+					self.handleError("No IP and Port provided in connection request response", CMErrors.CONNECTION);
 				end
 			else 
 				-- unrecognised message OR no auth token
@@ -153,7 +163,7 @@ function CMClient(n, i, p)
 			-- failed to deserialise message
 			self.trace("Cannot deserialize: " .. data .. ", " .. msgUtil.lastError, "connecting");
 			self.close();
-			self.handlError("Cannot deserialize: " .. data .. ", " .. msgUtil.lastError);
+			self.handlError("Cannot deserialize: " .. data .. ", " .. msgUtil.lastError, CMErrors.CONNECTION);
 		end
 	end);
 
@@ -177,8 +187,8 @@ function CMClient(n, i, p)
 	-- when a client connects we set state
 	client.attachConnectHandler(function()
 		self.setState(CMStates.CONNECTED_CLIENT);
-		self.trace("Client connected so now requesting server status");
-		self.requestServerStatus();
+		self.trace("Client connected");
+		--self.requestServerStatus();
 	end);
 
 	-- this is for handling incoming data to the client
@@ -188,7 +198,7 @@ function CMClient(n, i, p)
 			self.handleReceivedMessage(message);
 		else
 			garbageReceived = garbageReceived + 1;
-			self.handleError("Cannot deserialize: " .. data .. ", " .. msgUtil.lastError);
+			self.handleError("Cannot deserialize: " .. data .. ", " .. msgUtil.lastError, CMErrors.DESERIALIZE);
 		end
 	end);
 
@@ -203,7 +213,7 @@ function CMClient(n, i, p)
 		end
 
 		if not (state == CMStates.READY) then
-			self.handleError("Cannot request connection because not in READY state but in state " .. state);
+			self.handleError("Cannot request connection because not in READY state but in state " .. state, CMErrors.CONNECTION);
 			return;
 		end
 
@@ -322,6 +332,12 @@ function CMClient(n, i, p)
 			local response = msgUtil.createResponse(MessageType.PING_RESPONSE, message);
 			self.sendMessage(response);
 			return;
+		end
+
+		if message.type == MessageType.ERROR or message.type == MessageType.WARNING then
+			if receiveErrorHandler then
+				receiveErrorHandler(message);
+			end
 		end
 
 		if receiveHandler then

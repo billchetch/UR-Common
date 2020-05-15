@@ -31,6 +31,11 @@ function ADMServiceClient(serviceName)
 		end
 	end
 
+	function self.connect(i, p)
+		self.base.connect(i, p);
+		self.admReady = false;
+	end
+
 	function self.sendADMCommand(deviceID, command, arguments)
 		local scmd;
 		if deviceID then

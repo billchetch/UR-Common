@@ -1,3 +1,8 @@
+RestAPIErrors = {
+	REQUEST = 1,
+	RESPONSE = 2,
+	PARSE = 3,
+}
 
 function RestApiUtil(ep)
 	-- the new instance
@@ -12,9 +17,9 @@ function RestApiUtil(ep)
 	local errorHandler;
 	local responseHandler;
 
-	function self.handleError(err)
+	function self.handleError(err, errCode)
 		if errorHandler then
-			errorHandler(err);
+			errorHandler(err, errCode);
 		else
 			error("RestApitUtil:handleError " .. err);
 		end
@@ -38,19 +43,19 @@ function RestApiUtil(ep)
 
 	function self.handleResponse(err, resp)
 		if err then
-			self.handleError(err);
+			self.handleError(err, RestAPIErrors.RESPONSE);
 			return;
 		end
 
 		if resp == nil or resp == '' then
-			self.handleError("Empty response");
+			self.handleError("Empty response", RestAPIErrors.RESPONSE);
 			return;
 		end
 
 		--TODO error handling on failed parsing
 		local parsedData = self.parseResponse(resp);
 		if not parsedData then
-			self.handleError("Failed to parse response");
+			self.handleError("Failed to parse response", RestAPIErrors.PARSE);
 			return;
 		end
 
@@ -58,7 +63,7 @@ function RestApiUtil(ep)
 		if responseHandler then
 			local rerr = responseHandler(parsedData);
 			if rerr then
-				self.handleError(rerr);
+				self.handleError(rerr, RestAPIErrors.RESPONSE);
 			end
 			responseHandler = nil;
 		end
@@ -70,11 +75,11 @@ function RestApiUtil(ep)
 
 	function self.get(apiCall, params, onSuccess, onError)
 		if not self.endpoint then
-			return self.handleError("No endpoint specified");
+			return self.handleError("No endpoint specified", RestAPIErrors.REQUEST);
 		end
 
 		if not apiCall then
-			return self.handleError("Cannot have an empty api call");
+			return self.handleError("Cannot have an empty api call",  RestAPIErrors.REQUEST);
 		end
 
 		local url = self.endpoint .. "/" .. apiCall;
