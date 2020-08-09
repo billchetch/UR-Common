@@ -33,7 +33,6 @@ function ServiceClient(serviceName)
 	function self.connect(i , p)
 		self.base.connect(i, p);
 		self.serviceReady = false;
-
 		if self.isConnected() then
 			self.requestServiceStatus();
 		end
