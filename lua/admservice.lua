@@ -2,38 +2,14 @@ function ADMServiceClient(serviceName)
 	local utils = Utils();
 
 	local self = utils.inherit({
-		admReady = false;
+		
 	}, ServiceClient(serviceName));
 	
-	local admReadyHandler;
-
-	function self.attachADMReadyHandler(h)
-		admReadyHandler = h;
-	end
-
-
-	function self.onServiceReady(message)
-		self.base.onServiceReady(message);
-
-		local state = message.getValue("ADMState");
-		if state then
-			if state == "DEVICE_CONNECTED" then
-				self.admReady = true;
-			else
-				self.admReady = false;
-			end
-
-			if admReadyHandler then
-				admReadyHandler(self.admReady, state);
-			end
-		else
-			self.handleError("No AMDState key");
-		end
-	end
+	
 
 	function self.connect(i, p)
 		self.base.connect(i, p);
-		self.admReady = false;
+		
 	end
 
 	function self.sendADMCommand(deviceID, command, arguments)

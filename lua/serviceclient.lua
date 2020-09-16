@@ -14,8 +14,18 @@ function ServiceClient(serviceName)
 		end
 	end
 	
+	local serviceReadyHandler;
+
+	function self.attachServiceReadyHandler(h)
+		serviceReadyHandler = h;
+	end
+
 	function self.onServiceReady(message)
 		self.serviceReady = true;
+
+		if serviceReadyHandler then
+			serviceReadyHandler(self.serviceReady);
+		end
 	end
 
 	function self.keepAlive()
@@ -25,7 +35,7 @@ function ServiceClient(serviceName)
 	function self.handleReceivedMessage(message)
 		self.base.handleReceivedMessage(message);
 
-		if message.type == MessageType.STATUS_RESPONSE and message.getValue("Sender") == self.service then
+		if message.type == MessageType.STATUS_RESPONSE and message.getValue("Sender") == self.service and not self.serviceReady then
 			self.onServiceReady(message);
 		end
 	end
