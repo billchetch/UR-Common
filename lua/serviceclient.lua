@@ -49,7 +49,7 @@ function ServiceClient(serviceName)
 	end
 
 	function self.requestServiceStatus()
-		self.trace("Requesting service status  for " .. self.service);
+		self.trace("Requesting service status for " .. self.service);
 		self.requestClientStatus(self.service);
 	end
 

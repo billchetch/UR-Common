@@ -349,7 +349,7 @@ function CMClient(n, i, p)
 		if signHandler then
 			signHandler(msg, self.authToken);
 		else
-			msg.addValue("Signature", msg.getValue("Sender") .. "-" .. self.authToken);
+			msg.addValue("Signature", self.authToken .. "-" .. msg.getValue("Sender"));
 		end
 	end
 
