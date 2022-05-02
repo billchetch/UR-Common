@@ -29,13 +29,14 @@ function SocketUtil(hst, prt)
 	end
 
 	function self.handleData(data)
+		print("SocketUtil::handeData: recevied data");
 		if receiveHandler then
 			receiveHandler(data);
 		end
 	end
 
 	function self.handleClose()
-		-- print("Closed");
+		print("SocketUtil::handleClose Closed");
 		status = SocketState.RESET;
 		if closeHandler then
 			closeHandler();
@@ -44,7 +45,7 @@ function SocketUtil(hst, prt)
 
 	function self.handleConnect()
 		if status == SocketState.CONNECTING then
-			-- print("onconnect: Connected");
+			print("SocketUtil::handleConnect: Connected");
 			status = SocketState.CONNECTED;
 			if connectHandler then
 				connectHandler();

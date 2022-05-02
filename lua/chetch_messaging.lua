@@ -130,6 +130,7 @@ function CMClient(n, i, p)
 
 	-- client manager receives a message from server to open a new connection (the client)
 	clientMgr.attachReceiveHandler(function(data)
+		self.trace("Chetch Messaging receive hander recevied data");
 		local message = msgUtil.deserialize(data);
 		if message then
 			if message.type == MessageType.CONNECTION_REQUEST_RESPONSE then
@@ -265,14 +266,14 @@ function CMClient(n, i, p)
 		local nextTimeout = 0;
 		if self.isConnecting() then
 			self.trace("Client is currently connecting...", "monitoring");
-			nextTimeout = 20000;
+			nextTimeout = 200000;
 		elseif self.isConnected() then
 			self.trace("Client is of state connected so calling keepAlive...", "monitoring");
 			self.keepAlive(); -- this can fail if state is out of sync with actual connection
 			nextTimeout = 30000;
 		else
 			self.trace("Client is neither in state connected nor connecting", "monitoring");
-			nextTimeout = 5000;
+			nextTimeout = 50000;
 			self.close();
 			if self.ip then
 				if self.alwaysConnect then

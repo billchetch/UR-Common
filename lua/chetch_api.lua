@@ -35,7 +35,7 @@ function ChetchAPI(ep)
 				end,
 				function(err)
 					if err == "Timeout" then
-						print("Timeout so retrying...");
+						print("ChetchAPI: Timeout so retrying...");
 						self.init();
 					else
 						self.handleError(err);
